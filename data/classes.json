@@ -1,0 +1,7 @@
+{
+  "classes": [
+    { "id": "2v", "name": "2«В»", "file": "data/class-2v.json" },
+    { "id": "4b", "name": "4«Б»", "file": "data/class-4b.json" }
+  ],
+  "default": "2v"
+}

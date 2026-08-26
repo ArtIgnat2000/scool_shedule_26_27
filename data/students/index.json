@@ -1,0 +1,8 @@
+{
+  "students": [
+    { "id": "artem-2v", "name": "Артём", "class": "2v", "emoji": "⚽" },
+    { "id": "sofia-2v", "name": "София", "class": "2v", "emoji": "🎨" },
+    { "id": "maxim-4b", "name": "Максим", "class": "4b", "emoji": "🏊" },
+    { "id": "vera-4b", "name": "Вера", "class": "4b", "emoji": "🎻" }
+  ]
+}
