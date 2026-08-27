@@ -1,4 +1,4 @@
-/* Персональная страница ученика · v2.0
+/* Персональная страница ученика · v2.1.0
    student.html            → список учеников
    student.html?id=xxx     → личное расписание: уроки класса + доп. занятия */
 
@@ -59,7 +59,7 @@
   document.getElementById("student-title").textContent =
     (student.emoji ? student.emoji + " " : "") + student.name;
   document.getElementById("student-subtitle").textContent =
-    "Класс " + clsName + " · уроки, доп. занятия и секции";
+    clsName + " · личное";
 
   /* сегмент-контрол на все 7 дней */
   const dayBar = document.getElementById("p-day-switch");

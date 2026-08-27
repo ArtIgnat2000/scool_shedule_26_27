@@ -10,36 +10,44 @@
 </head>
 <body>
     <div class="page" id="main">
-        <div class="topbar">
-            <div class="title-block">
-                <h1 id="student-title">Моё расписание</h1>
-                <p class="subtitle" id="student-subtitle">Личные уроки, тренировки и секции</p>
+        <header class="topbar">
+            <div class="topbar-main">
+                <div class="title-block">
+                    <h1 id="student-title">Моё расписание</h1>
+                    <p class="subtitle" id="student-subtitle">Личные занятия</p>
+                </div>
+                <nav class="nav" aria-label="Основная навигация">
+                    <a href="index.html"><span aria-hidden="true">📚</span><span>Уроки</span></a>
+                    <a href="holidays.html"><span aria-hidden="true">🌴</span><span>Каникулы</span></a>
+                    <a href="student.html" class="current" aria-current="page"><span aria-hidden="true">👤</span><span>Моё</span></a>
+                    <a href="meal.html"><span aria-hidden="true">🍽️</span><span>Еда</span></a>
+                </nav>
+                <a class="settings-button" href="settings.html" aria-label="Открыть настройки" title="Настройки">
+                    <span aria-hidden="true">⚙️</span>
+                </a>
             </div>
-            <nav class="nav">
-                <a href="index.html">📚 Уроки</a>
-                <a href="holidays.html">🌴 Каникулы</a>
-                <a href="student.html" class="current">👤 Моё расписание</a>
-            </nav>
-        </div>
+        </header>
 
-        <!-- Режим 1: список учеников -->
-        <div class="card" id="student-list-card" hidden>
-            <h2>Выберите ученика</h2>
-            <ul class="student-list" id="student-list"></ul>
-            <p class="hint">Совет: сохраните личную ссылку (со своим именем в адресе) в закладки —
-               страница будет открываться сразу на вашем расписании.</p>
-        </div>
-
-        <!-- Режим 2: личное расписание -->
-        <div id="personal" hidden>
-            <div class="card">
-                <div class="segmented" id="p-day-switch"></div>
-                <h2 id="p-day-title" style="margin-top:14px;">&nbsp;</h2>
-                <div id="personal-content"></div>
+        <main>
+            <!-- Режим 1: список учеников -->
+            <div class="card" id="student-list-card" hidden>
+                <h2>Выберите ученика</h2>
+                <ul class="student-list" id="student-list"></ul>
+                <p class="hint">Совет: сохраните личную ссылку (со своим именем в адресе) в закладки —
+                   страница будет открываться сразу на вашем расписании.</p>
             </div>
-        </div>
 
-        <footer>© 2026–2027 · Школьное расписание v2.0</footer>
+            <!-- Режим 2: личное расписание -->
+            <div id="personal" hidden>
+                <div class="card">
+                    <div class="segmented" id="p-day-switch"></div>
+                    <h2 id="p-day-title" style="margin-top:14px;">&nbsp;</h2>
+                    <div id="personal-content"></div>
+                </div>
+            </div>
+        </main>
+
+        <footer>© 2026–2027 · Школьное расписание v2.1.0</footer>
     </div>
 
     <script src="js/data.js"></script>

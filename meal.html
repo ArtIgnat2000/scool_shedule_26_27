@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="utf-8">
-    <title>🌴 Каникулы · учебный год 2026/2027</title>
+    <title>🍽️ Еда · Школьное расписание</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
@@ -13,14 +13,14 @@
         <header class="topbar">
             <div class="topbar-main">
                 <div class="title-block">
-                    <h1>Каникулы</h1>
-                    <p class="subtitle" id="calendar-subtitle">2026/27</p>
+                    <h1>Питание</h1>
+                    <p class="subtitle" id="meal-subtitle">Загрузка…</p>
                 </div>
                 <nav class="nav" aria-label="Основная навигация">
                     <a href="index.html"><span aria-hidden="true">📚</span><span>Уроки</span></a>
-                    <a href="holidays.html" class="current" aria-current="page"><span aria-hidden="true">🌴</span><span>Каникулы</span></a>
+                    <a href="holidays.html"><span aria-hidden="true">🌴</span><span>Каникулы</span></a>
                     <a href="student.html"><span aria-hidden="true">👤</span><span>Моё</span></a>
-                    <a href="meal.html"><span aria-hidden="true">🍽️</span><span>Еда</span></a>
+                    <a href="meal.html" class="current" aria-current="page"><span aria-hidden="true">🍽️</span><span>Еда</span></a>
                 </nav>
                 <a class="settings-button" href="settings.html" aria-label="Открыть настройки" title="Настройки">
                     <span aria-hidden="true">⚙️</span>
@@ -29,29 +29,22 @@
         </header>
 
         <main>
-            <div class="card">
-                <h2>Периоды каникул</h2>
-                <div class="countdown" id="vacation-countdown" aria-live="polite"></div>
-                <div class="vac-summary" id="vac-summary"></div>
-            </div>
+            <div class="card meal-board">
+                <div id="meal-content">
+                    <div class="loading">Загрузка расписания питания…</div>
+                </div>
 
-            <div class="card">
-                <h2>Обозначения</h2>
-                <div class="legend">
-                    <span><i class="li-school"></i> Учебный день</span>
-                    <span><i class="li-off"></i> Выходной / праздник</span>
-                    <span><i class="li-vac"></i> Каникулы</span>
-                    <span><i class="li-today"></i> Сегодня</span>
+                <div class="meal-info-block">
+                    <div class="section-kicker">Кафе</div>
+                    <div class="meal-info-grid" id="meal-info"></div>
                 </div>
             </div>
-
-            <div class="months-grid" id="months"></div>
         </main>
 
         <footer>© 2026–2027 · Школьное расписание v2.1.0</footer>
     </div>
 
     <script src="js/data.js"></script>
-    <script src="js/calendar.js"></script>
+    <script src="js/meal.js"></script>
 </body>
 </html>

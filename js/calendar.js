@@ -1,7 +1,9 @@
-/* Календарь каникул: генерация месяцев учебного года · v2.0 */
+/* Календарь каникул: генерация месяцев учебного года · v2.1.0 */
 
 (async function () {
+  const calendarSubtitle = document.getElementById("calendar-subtitle");
   const summaryBox = document.getElementById("vac-summary");
+  const countdownBox = document.getElementById("vacation-countdown");
   const monthsBox = document.getElementById("months");
 
   let data;
@@ -15,67 +17,109 @@
   const MONTH_NAMES = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
                        "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
   const DOW = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
+  const currentSystem = getSchoolSystemKey(data);
+  let focusTimer = null;
 
   const iso = d => d.getFullYear() + "-" +
     String(d.getMonth() + 1).padStart(2, "0") + "-" +
     String(d.getDate()).padStart(2, "0");
 
-  const holidaySet = new Map();
-  (data.publicHolidays || []).forEach(h => holidaySet.set(h.date, h.name));
-  const specialSet = new Map();
-  (data.specialDays || []).forEach(s => specialSet.set(s.date, s.name));
-
-  function vacationOf(dateStr) {
-    return (data.vacations || []).find(v => dateStr >= v.start && dateStr <= v.end) || null;
+  function render() {
+    if (focusTimer) {
+      clearTimeout(focusTimer);
+      focusTimer = null;
+    }
+    const system = getSchoolSystem(data, currentSystem);
+    calendarSubtitle.textContent = data.schoolYear + " · " + system.label;
+    renderCountdown(system);
+    renderSummary(system);
+    renderMonths(system);
   }
 
-  const todayStr = iso(new Date());
+  function renderCountdown(system) {
+    const today = localISODate();
+    const status = getAcademicStatus(data, today, currentSystem);
+    const upcoming = nextVacation(data, today, currentSystem);
+    let text;
 
-  /* --- сводка каникул --- */
-  const fmt = ds => {
-    const [y, m, d] = ds.split("-").map(Number);
-    return d + " " + ["янв", "фев", "мар", "апр", "мая", "июн",
-      "июл", "авг", "сен", "окт", "ноя", "дек"][m - 1] + " " + y;
-  };
+    if (status.type === "before-year") {
+      /* Дни до начала учебного года не входят в счётчик. */
+      text = "Учебный год ещё не начался · старт " + formatDateRu(system.yearStart);
+    } else if (status.type === "vacation") {
+      const left = daysBetween(today, status.vacation.end);
+      text = "Сейчас каникулы: " + status.vacation.name +
+        " · до " + formatDateRu(status.vacation.end) +
+        " (осталось " + left + " " + pluralRu(left, "день", "дня", "дней") + ")";
+    } else if (status.type === "after-year") {
+      text = "Учебный год завершён";
+    } else if (upcoming.next) {
+      const days = schoolDaysBetween(data, today, upcoming.next.start, currentSystem);
+      text = days > 0
+        ? "До " + upcoming.next.name + " — " + days + " " +
+          pluralRu(days, "учебный день", "учебных дня", "учебных дней") +
+          " · начало " + formatDateRu(upcoming.next.start)
+        : "Ближайшие каникулы начинаются " + formatDateRu(upcoming.next.start);
+    } else {
+      text = "Ближайших периодов каникул нет";
+    }
 
-  (data.vacations || []).forEach(v => {
-    const item = el("button", "vac-item" + (v.optional ? " optional" : ""));
-    item.type = "button";
-    item.dataset.start = v.start;
-    item.dataset.end = v.end;
-    item.setAttribute("aria-label", "Показать период: " + v.name);
-    item.addEventListener("click", () => focusVacation(v));
-
-    item.appendChild(el("span", "v-emoji", v.emoji || "🌴"));
-    const txt = el("div");
-    const name = el("div", "v-name");
-    name.textContent = v.name;
-    txt.appendChild(name);
-    const dates = el("div", "v-dates");
-    dates.textContent = v.start === v.end ? fmt(v.start) : fmt(v.start) + " — " + fmt(v.end);
-    txt.appendChild(dates);
-    item.appendChild(txt);
-    summaryBox.appendChild(item);
-  });
-
-  /* --- месяцы учебного года --- */
-  const [sy, sm] = data.yearStart.split("-").map(Number);
-  const [ey, em] = data.yearEnd.split("-").map(Number);
-
-  let y = sy, m = sm - 1; // month 0-based
-  while (y < ey || (y === ey && m <= em - 1)) {
-    monthsBox.appendChild(renderMonth(y, m));
-    m++;
-    if (m > 11) { m = 0; y++; }
+    countdownBox.className = "countdown " + status.type;
+    countdownBox.textContent = text;
   }
 
-  let focusTimer = null;
+  function renderSummary(system) {
+    summaryBox.innerHTML = "";
+    system.vacations.forEach(v => {
+      const item = el("button", "vac-item" + (v.optional ? " optional" : ""));
+      item.type = "button";
+      item.dataset.start = v.start;
+      item.dataset.end = v.end;
+      item.setAttribute("aria-label", "Показать период: " + v.name);
+      item.addEventListener("click", () => focusVacation(v, system));
 
-  function focusVacation(v) {
+      item.appendChild(el("span", "v-emoji", v.emoji || "🌴"));
+      const txt = el("div");
+      const name = el("div", "v-name");
+      name.textContent = v.name;
+      txt.appendChild(name);
+      const dates = el("div", "v-dates");
+      dates.textContent = v.start === v.end ? formatDateRu(v.start) :
+        formatDateRu(v.start) + " — " + formatDateRu(v.end);
+      txt.appendChild(dates);
+      item.appendChild(txt);
+      summaryBox.appendChild(item);
+    });
+  }
+
+  function renderMonths(system) {
+    monthsBox.innerHTML = "";
+    const holidaySet = new Map();
+    (system.publicHolidays || []).forEach(h => holidaySet.set(h.date, h.name));
+    const specialSet = new Map();
+    (system.specialDays || []).forEach(s => specialSet.set(s.date, s.name));
+    if (system.lastSchoolDay) {
+      specialSet.set(system.lastSchoolDay, "Последний учебный день");
+    }
+
+    const [sy, sm] = system.yearStart.split("-").map(Number);
+    const [ey, em] = system.yearEnd.split("-").map(Number);
+    let y = sy, m = sm - 1; // month 0-based
+    while (y < ey || (y === ey && m <= em - 1)) {
+      monthsBox.appendChild(renderMonth(y, m, system, holidaySet, specialSet));
+      m++;
+      if (m > 11) { m = 0; y++; }
+    }
+  }
+
+  function focusVacation(v, system) {
     if (focusTimer) clearTimeout(focusTimer);
     document.querySelectorAll(".period-focus").forEach(node => node.classList.remove("period-focus"));
 
-    const month = document.getElementById("month-" + v.start.slice(0, 7));
+    /* Если период начинается после последнего отображаемого дня,
+       ведём пользователя к последнему доступному месяцу. */
+    const targetDate = v.start > system.yearEnd ? system.yearEnd :
+      (v.end < system.yearStart ? system.yearStart : v.start);
+    const month = document.getElementById("month-" + targetDate.slice(0, 7));
     if (!month) return;
 
     const cells = Array.from(document.querySelectorAll(".cal-day[data-date]")).filter(cell => {
@@ -96,7 +140,7 @@
     }, 3200);
   }
 
-  function renderMonth(year, month) {
+  function renderMonth(year, month, system, holidaySet, specialSet) {
     const wrap = el("div", "cal-month");
     wrap.id = "month-" + year + "-" + String(month + 1).padStart(2, "0");
     wrap.dataset.month = year + "-" + String(month + 1).padStart(2, "0");
@@ -120,14 +164,14 @@
       cell.dataset.date = ds;
       const titles = [];
 
-      const vac = vacationOf(ds);
-      if (vac) { cell.classList.add("vac"); titles.push(vac.name); }
+      const vacation = system.vacations.find(v => ds >= v.start && ds <= v.end);
+      if (vacation) { cell.classList.add("vac"); titles.push(vacation.name); }
 
       if (dow >= 5) { cell.classList.add("off"); }
       if (holidaySet.has(ds)) { cell.classList.add("off"); titles.push(holidaySet.get(ds)); }
 
       if (specialSet.has(ds)) { cell.classList.add("special"); titles.push(specialSet.get(ds)); }
-      if (ds === todayStr) { cell.classList.add("today"); titles.push("Сегодня"); }
+      if (ds === localISODate()) { cell.classList.add("today"); titles.push("Сегодня"); }
 
       if (titles.length) cell.title = titles.join(" · ");
       grid.appendChild(cell);
@@ -136,4 +180,6 @@
     wrap.appendChild(grid);
     return wrap;
   }
+
+  render();
 })();

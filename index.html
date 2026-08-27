@@ -10,42 +10,45 @@
 </head>
 <body>
     <div class="page">
-        <div class="topbar">
-            <div class="title-block">
-                <h1>Расписание</h1>
-                <p class="subtitle" id="page-subtitle">Загрузка…</p>
+        <header class="topbar">
+            <div class="topbar-main">
+                <div class="title-block">
+                    <h1>Расписание</h1>
+                    <p class="subtitle" id="page-subtitle">Загрузка…</p>
+                </div>
+                <nav class="nav" aria-label="Основная навигация">
+                    <a href="index.html" class="current" aria-current="page"><span aria-hidden="true">📚</span><span>Уроки</span></a>
+                    <a href="holidays.html"><span aria-hidden="true">🌴</span><span>Каникулы</span></a>
+                    <a href="student.html"><span aria-hidden="true">👤</span><span>Моё</span></a>
+                    <a href="meal.html"><span aria-hidden="true">🍽️</span><span>Еда</span></a>
+                </nav>
+                <a class="settings-button" href="settings.html" aria-label="Открыть настройки" title="Настройки">
+                    <span aria-hidden="true">⚙️</span>
+                </a>
             </div>
-            <nav class="nav">
-                <a href="index.html" class="current">📚 Уроки</a>
-                <a href="holidays.html">🌴 Каникулы</a>
-                <a href="student.html">👤 Моё расписание</a>
-                <a href="https://artignat2000.github.io/meal-schedule/">🍽️ Еда</a>
-            </nav>
-        </div>
+        </header>
 
-        <div class="card">
-            <h2>Класс</h2>
-            <div class="segmented large" id="class-switch"></div>
-        </div>
-
-        <div class="card">
-            <div class="segmented" id="day-switch"></div>
-            <h2 id="day-title" style="margin-top:14px;">&nbsp;</h2>
-            <div id="schedule-content">
-                <div class="loading">Загрузка расписания…</div>
+        <main>
+            <div class="card">
+                <div class="today-status" id="today-status" aria-live="polite" hidden></div>
+                <div class="segmented" id="day-switch"></div>
+                <h2 id="day-title" style="margin-top:14px;">&nbsp;</h2>
+                <div id="schedule-content">
+                    <div class="loading">Загрузка расписания…</div>
+                </div>
             </div>
-        </div>
 
-        <div class="card">
-            <h2>Границы оценок</h2>
-            <div class="rating-grid">
-                <span class="rating-pill r">40–69</span><span class="rating-desc">3 — удовлетворительно</span>
-                <span class="rating-pill y">70–84</span><span class="rating-desc">4 — хорошо</span>
-                <span class="rating-pill g">85–100</span><span class="rating-desc">5 — отлично</span>
+            <div class="card">
+                <h2>Границы оценок</h2>
+                <div class="rating-grid">
+                    <span class="rating-pill r">40–69</span><span class="rating-desc">3 — удовлетворительно</span>
+                    <span class="rating-pill y">70–84</span><span class="rating-desc">4 — хорошо</span>
+                    <span class="rating-pill g">85–100</span><span class="rating-desc">5 — отлично</span>
+                </div>
             </div>
-        </div>
+        </main>
 
-        <footer>© 2026–2027 · Школьное расписание v2.0</footer>
+        <footer>© 2026–2027 · Школьное расписание v2.1.0</footer>
     </div>
 
     <script src="js/data.js"></script>
