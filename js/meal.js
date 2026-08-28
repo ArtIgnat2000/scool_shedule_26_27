@@ -1,4 +1,6 @@
-/* Страница питания · v2.1.0 */
+/* Страница питания · v2.2.0
+   Компактная таблица «приём пищи — время» для выбранного класса.
+   Особые позиции (свободный выбор блюд) вынесены вниз, к режиму работы кафе. */
 
 (async function () {
   const content = document.getElementById("meal-content");
@@ -25,7 +27,6 @@
   const selectedClass = registry.classes.find(cls => cls.id === selectedId);
   const className = selectedClass ? selectedClass.name : selectedId;
   const classCode = className.replace(/[«»\s]/g, "");
-
   subtitle.textContent = className;
 
   function gradeOf(code) {
@@ -47,39 +48,70 @@
     return match ? Number(match[1]) * 60 + Number(match[2]) : Number.MAX_SAFE_INTEGER;
   }
 
-  function renderSections() {
-    content.innerHTML = "";
-    (mealData.sections || []).forEach(sectionData => {
-      const section = el("section", "meal-section");
-      const heading = el("div", "meal-heading");
-      heading.appendChild(el("span", "meal-heading-icon", sectionData.emoji || "🍽️"));
-      heading.appendChild(el("h2", null, sectionData.title));
-      section.appendChild(heading);
+  /* Убираем диапазон классов из названия приёма («Полдник 1–4» → «Полдник»). */
+  function cleanTitle(title) {
+    return String(title || "").replace(/\s+\d+–\d+$/, "").trim();
+  }
 
-      const list = el("div", "meal-list");
-      const matchingRows = (sectionData.rows || [])
-        .filter(rowMatches)
-        .sort((a, b) => firstTime(a.time) - firstTime(b.time));
-
-      if (!matchingRows.length) return;
-
-      matchingRows.forEach(rowData => {
-        const row = el("div", "meal-row" + (rowData.special ? " special" : ""));
-        row.appendChild(el("div", "meal-time", rowData.time));
-        if (rowData.special) {
-          const details = el("div", "meal-classes");
-          details.textContent = rowData.label || "Свободный выбор блюд";
-          row.appendChild(details);
-        }
-        list.appendChild(row);
-      });
-      section.appendChild(list);
-      content.appendChild(section);
+  /* Собираем подходящие строки: обычные — в таблицу, особые — вниз к кафе. */
+  const meals = [];
+  const specials = [];
+  (mealData.sections || []).forEach(sectionData => {
+    (sectionData.rows || []).filter(rowMatches).forEach(row => {
+      if (row.special) specials.push({ section: sectionData, row });
+      else meals.push({ section: sectionData, row });
     });
+  });
+  meals.sort((a, b) => firstTime(a.row.time) - firstTime(b.row.time));
+
+  function renderTable() {
+    content.innerHTML = "";
+
+    if (!meals.length) {
+      content.appendChild(el("div", "empty-note", "Для этого класса приёмов пищи не найдено"));
+      return;
+    }
+
+    const table = el("table", "meal-table");
+    const thead = el("thead");
+    const headRow = el("tr");
+    const thName = el("th", null, "Приём пищи");
+    const thTime = el("th", null, "Время");
+    thName.scope = "col";
+    thTime.scope = "col";
+    headRow.appendChild(thName);
+    headRow.appendChild(thTime);
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+
+    const tbody = el("tbody");
+    meals.forEach(({ section, row }) => {
+      const tr = el("tr");
+      const nameCell = el("td", "meal-name");
+      nameCell.appendChild(el("span", "meal-emoji", section.emoji || "🍽️"));
+      nameCell.appendChild(el("span", null, cleanTitle(section.title)));
+      tr.appendChild(nameCell);
+      tr.appendChild(el("td", "meal-time-cell", row.time));
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    content.appendChild(table);
   }
 
   function renderInfo() {
     infoBox.innerHTML = "";
+
+    /* Особые позиции (свободный выбор блюд) — рядом с режимом работы. */
+    specials.forEach(({ row }) => {
+      const item = el("div", "meal-info-item");
+      item.appendChild(el("span", "meal-info-icon", "🍽️"));
+      const text = el("div");
+      text.appendChild(el("div", "meal-info-label", row.label || "Свободный выбор блюд"));
+      text.appendChild(el("div", "meal-info-value", row.time));
+      item.appendChild(text);
+      infoBox.appendChild(item);
+    });
+
     (mealData.info || []).forEach(info => {
       const item = el("div", "meal-info-item");
       item.appendChild(el("span", "meal-info-icon", info.emoji || "ℹ️"));
@@ -91,6 +123,6 @@
     });
   }
 
-  renderSections();
+  renderTable();
   renderInfo();
 })();

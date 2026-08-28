@@ -1,4 +1,5 @@
-/* Главная страница: расписание по дням · v2.1.0 */
+/* Главная страница: расписание по дням · v2.2.0
+   Уроки класса + личные занятия выбранного ученика (выбор — в настройках). */
 
 (async function () {
   const dayBar = document.getElementById("day-switch");
@@ -6,17 +7,19 @@
   const dayTitle = document.getElementById("day-title");
   const statusBox = document.getElementById("today-status");
 
-  let registry, calendarData;
+  let registry, calendarData, studentIndex;
   let currentClass = null;
   let currentSystem = null;
+  let studentMeta = null;   // выбранный ученик (из настроек)
+  let studentData = null;   // его личные занятия
   const cache = {};
   let todayKey = currentDayKey();
-  let currentDay = weekdayOrMonday(todayKey);
 
   try {
-    [registry, calendarData] = await Promise.all([
+    [registry, calendarData, studentIndex] = await Promise.all([
       loadJSON("data/classes.json"),
-      loadJSON("data/holidays.json")
+      loadJSON("data/holidays.json"),
+      loadJSON("data/students/index.json").catch(() => ({ students: [] }))
     ]);
   } catch (e) {
     showError(content, e.message);
@@ -29,20 +32,44 @@
     return DAYS.slice(0, 5).some(day => day.key === key) ? key : "mon";
   }
 
-  /* --- выбор класса теперь находится на странице «Настройки» --- */
+  /* --- класс: адрес → хранилище → по умолчанию --- */
   const ids = registry.classes.map(c => c.id);
   let selected = getParam("class");
   if (!ids.includes(selected)) selected = readStored("schedule.class");
   if (!ids.includes(selected)) selected = registry.default || ids[0];
 
-  /* --- сегмент-контрол дней (Пн–Пт) --- */
-  DAYS.slice(0, 5).forEach(d => {
-    const btn = el("button", null, d.short);
-    btn.type = "button";
-    btn.dataset.key = d.key;
-    btn.addEventListener("click", () => selectDay(d.key));
-    dayBar.appendChild(btn);
-  });
+  /* --- выбранный ученик: ?student= или настройки --- */
+  let selectedStudent = getParam("student") || readStored("schedule.student");
+  {
+    const meta = studentIndex.students.find(s => s.id === selectedStudent);
+    /* ученик учитывается, только если он из выбранного класса */
+    if (meta && meta.class === selected) studentMeta = meta;
+  }
+
+  let currentDay = studentMeta ? todayKey : weekdayOrMonday(todayKey);
+
+  /* Без ученика — Пн–Пт, с учеником — вся неделя (есть занятия на выходных). */
+  function renderDayBar() {
+    dayBar.innerHTML = "";
+    const days = studentMeta ? DAYS : DAYS.slice(0, 5);
+    days.forEach(d => {
+      const btn = el("button", d.weekend ? "off-day" : null, d.short);
+      btn.type = "button";
+      btn.dataset.key = d.key;
+      btn.addEventListener("click", () => { currentDay = d.key; render(); });
+      dayBar.appendChild(btn);
+    });
+  }
+
+  async function loadStudent() {
+    studentData = null;
+    if (!studentMeta || studentMeta.class !== currentClass) return;
+    try {
+      studentData = await loadJSON("data/students/" + studentMeta.id + ".json");
+    } catch (e) {
+      studentData = null;
+    }
+  }
 
   async function selectClass(id) {
     currentClass = id;
@@ -50,8 +77,9 @@
     setParam("class", id);
     const meta = registry.classes.find(c => c.id === id);
     const system = getSchoolSystem(calendarData, currentSystem);
-    document.getElementById("page-subtitle").textContent =
-      meta.name + " · " + system.label + " · " + calendarData.schoolYear;
+    let subtitle = meta.name + " · " + system.label + " · " + calendarData.schoolYear;
+    if (studentMeta && studentMeta.class === id) subtitle += " · " + studentMeta.name;
+    document.getElementById("page-subtitle").textContent = subtitle;
 
     if (!cache[id]) {
       content.innerHTML = '<div class="loading">Загрузка…</div>';
@@ -62,12 +90,8 @@
         return;
       }
     }
+    await loadStudent();
     renderTodayStatus();
-    render();
-  }
-
-  function selectDay(key) {
-    currentDay = key;
     render();
   }
 
@@ -154,29 +178,49 @@
     dayTitle.textContent = day.full + (currentDay === todayKey ? " · сегодня" : "");
 
     if (!cache[currentClass]) return;
+    content.innerHTML = "";
+
     const lessons = (cache[currentClass].days || {})[currentDay] || [];
     const states = lessonStates(lessons, currentDay);
-    content.innerHTML = "";
-    if (!lessons.length) {
-      content.appendChild(el("div", "empty-note", "На этот день уроков нет 🎉"));
-      return;
+    const acts = studentData ? (studentData.activities || {})[currentDay] || [] : [];
+
+    if (lessons.length && acts.length) {
+      content.appendChild(el("div", "day-section-title",
+        "📚 Уроки — " + cache[currentClass].name));
     }
-    const ul = el("ul", "lesson-list");
-    lessons.forEach(l => ul.appendChild(lessonRow(l, states.get(l.n))));
-    content.appendChild(ul);
+
+    if (lessons.length) {
+      const ul = el("ul", "lesson-list");
+      lessons.forEach(l => ul.appendChild(lessonRow(l, states.get(l.n))));
+      content.appendChild(ul);
+    }
+
+    if (studentMeta && acts.length) {
+      content.appendChild(el("div", "day-section-title",
+        "⭐ Личные занятия — " + studentMeta.name));
+      const ul = el("ul", "lesson-list");
+      acts.forEach(a => ul.appendChild(activityRow(a)));
+      content.appendChild(ul);
+    }
+
+    if (!lessons.length && !acts.length) {
+      content.appendChild(el("div", "empty-note",
+        day.weekend ? "Выходной — уроков нет 🎉" : "На этот день уроков нет 🎉"));
+    }
   }
 
   /* Пересчитываем текущий урок раз в минуту; при смене даты
-     автоматически переключаемся на новый будний день. */
+     автоматически переключаемся на новый день. */
   setInterval(() => {
     const freshTodayKey = currentDayKey();
     if (freshTodayKey !== todayKey) {
       todayKey = freshTodayKey;
-      currentDay = weekdayOrMonday(todayKey);
+      currentDay = studentMeta ? freshTodayKey : weekdayOrMonday(freshTodayKey);
     }
     renderTodayStatus();
     render();
   }, 60000);
 
+  renderDayBar();
   await selectClass(selected);
 })();

@@ -1,5 +1,5 @@
 /* ============================================================
-   Школьное расписание · v2.1.0
+   Школьное расписание · v2.2.0
    Дизайн-система в стиле iOS 26 (Liquid Glass)
    ============================================================ */
 
@@ -600,59 +600,50 @@ body::before {
   overflow: hidden;
 }
 
-.meal-section {
-  padding: 14px 18px 12px;
+.meal-body { padding: 16px 18px 12px; }
+
+/* Компактная таблица «приём пищи — время» */
+.meal-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
 }
 
-.meal-section + .meal-section {
+.meal-table th {
+  text-align: left;
+  color: var(--text-3);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 6px 8px;
+}
+
+.meal-table th:last-child,
+.meal-table td:last-child { text-align: right; }
+
+.meal-table td {
+  padding: 10px 6px;
   border-top: 1px solid var(--separator);
+  vertical-align: middle;
 }
 
-.meal-heading {
+.meal-table tbody tr:first-child td { border-top: none; }
+
+.meal-name {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 6px;
-}
-
-.meal-heading h2 { margin: 0; font-size: 1.04rem; }
-.meal-heading-icon { font-size: 1.15rem; }
-.meal-list { margin: 0; }
-
-.meal-row {
-  display: grid;
-  grid-template-columns: 110px minmax(0, 1fr);
-  align-items: center;
   gap: 10px;
-  min-width: 0;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--separator);
+  font-weight: 600;
 }
 
-.meal-row:last-child { border-bottom: none; }
-.meal-row.special {
-  margin: 4px 0;
-  padding: 8px 9px;
-  border-bottom-color: transparent;
-  border-radius: var(--radius-s);
-  background: var(--orange-soft);
-}
+.meal-emoji { font-size: 1.15rem; line-height: 1; }
 
-.meal-time {
-  min-width: 0;
-  color: var(--text-2);
-  font-size: 0.82rem;
-  font-variant-numeric: tabular-nums;
+.meal-time-cell {
+  color: var(--text);
   font-weight: 750;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
-}
-
-.meal-classes {
-  min-width: 0;
-  overflow-wrap: anywhere;
-  font-size: 0.86rem;
-  font-weight: 550;
-  line-height: 1.28;
 }
 
 .meal-info-block {
@@ -678,6 +669,64 @@ body::before {
 .meal-info-icon { flex: 0 0 auto; font-size: 1.05rem; }
 .meal-info-label { color: var(--text-2); font-size: 0.73rem; font-weight: 600; }
 .meal-info-value { margin-top: 1px; font-size: 0.82rem; font-weight: 650; line-height: 1.22; }
+
+/* ---------- Выбор ученика (настройки) ---------- */
+
+.student-picker { display: flex; flex-direction: column; gap: 8px; }
+
+.student-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-m);
+  background: var(--glass-strong);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.student-option:hover { background: var(--seg-bg); }
+.student-option:active { transform: scale(0.99); }
+.student-option:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.student-option.active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.student-option.none { color: var(--text-2); font-weight: 550; }
+
+.student-name { flex: 1; min-width: 0; }
+
+.student-check {
+  flex: 0 0 auto;
+  width: 20px;
+  color: var(--accent);
+  font-weight: 800;
+  text-align: center;
+}
+
+.link-button {
+  appearance: none;
+  border: none;
+  background: none;
+  padding: 0;
+  margin-top: 10px;
+  color: var(--red);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.link-button:hover { opacity: 0.75; }
 
 /* ---------- Список учеников ---------- */
 
@@ -788,12 +837,9 @@ footer a { color: var(--text-2); }
   .lesson-state { padding: 3px 6px; font-size: 0.68rem; }
   .vac-summary { grid-template-columns: 1fr; }
   .months-grid { grid-template-columns: 1fr; }
-  .meal-section { padding: 12px 14px 10px; }
+  .meal-body { padding: 12px 14px 10px; }
   .meal-info-block { padding: 11px 14px 13px; }
   .meal-info-grid { grid-template-columns: 1fr; }
-  .meal-row { grid-template-columns: 96px minmax(0, 1fr); gap: 8px; align-items: start; }
-  .meal-time { font-size: 0.78rem; }
-  .meal-classes { font-size: 0.82rem; }
 
   /* Нижняя вкладка — привычна для телефона и освобождает шапку. */
   .nav {

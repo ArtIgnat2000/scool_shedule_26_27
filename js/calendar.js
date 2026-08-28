@@ -1,4 +1,4 @@
-/* Календарь каникул: генерация месяцев учебного года · v2.1.0 */
+/* Календарь каникул: генерация месяцев учебного года · v2.2.0 */
 
 (async function () {
   const calendarSubtitle = document.getElementById("calendar-subtitle");
